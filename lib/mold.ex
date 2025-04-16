@@ -2,8 +2,9 @@ defmodule Mold do
   defmacro __using__(_opts) do
     quote do
       import Mold
-      Module.register_attribute(__MODULE__, :struct_field, accumulate: true)
-      Module.register_attribute(__MODULE__, :fields, accumulate: true)
+      Module.register_attribute(__MODULE__, :slots, accumulate: true)
+      Module.register_attribute(__MODULE__, :struct_slot, accumulate: true)
+      Module.register_attribute(__MODULE__, :required_slot, accumulate: true)
       @before_compile Mold
     end
   end
@@ -14,23 +15,49 @@ defmodule Mold do
     end
   end
 
-  defmacro field(name, type, opts \\ []) do
+  defmacro req(name, type, opts \\ []) do
     quote do
-      @struct_field unquote(name)
-      @fields {unquote(name), unquote(type), unquote(opts)}
+      @slots {unquote(name), unquote(type), unquote(opts)}
+      @struct_slot unquote(name)
+      @required_slot unquote(name)
+    end
+  end
+
+  defmacro opt(name, type, opts \\ []) do
+    quote do
+      @slots {unquote(name), unquote(type), unquote(opts)}
+      @struct_slot unquote(name)
     end
   end
 
   defmacro __before_compile__(env) do
-    struct_field = Module.get_attribute(env.module, :struct_field) || []
-    fields = Module.get_attribute(env.module, :fields) || []
+    slots = Module.get_attribute(env.module, :slots) || []
+    struct_slot = Module.get_attribute(env.module, :struct_slot) || []
+    required_slot = Module.get_attribute(env.module, :required_slot) || []
 
     quote do
-      defstruct unquote(struct_field)
+      @enforce_keys unquote(required_slot)
+      defstruct unquote(struct_slot)
 
-      defp __fields__, do: unquote(Macro.escape(fields))
+      defp __slots__, do: unquote(Macro.escape(slots))
+      defp __struct_slot__, do: unquote(Macro.escape(struct_slot))
 
-      def new(params \\ %{}), do: struct(__MODULE__, params)
+      def new(params) do
+        unquote(required_slot)
+        |> Enum.reject(&Map.has_key?(params, &1))
+        |> case do
+          [] ->
+            {:ok, struct(__MODULE__, params)}
+
+          missing_keys ->
+            {:error,
+             %{
+               error: "Missing required keys",
+               missing_keys: missing_keys,
+               available_keys: __struct_slot__()
+             }}
+        end
+      end
     end
   end
 end
