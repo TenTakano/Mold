@@ -1,0 +1,49 @@
+defmodule Mold.Builder do
+  def build(:string, value, opts), do: build_string(value, opts)
+  def build(:integer, value, opts), do: build_integer(value, opts)
+  def build(:float, value, opts), do: build_float(value, opts)
+  def build(:boolean, value, opts), do: build_boolean(value, opts)
+  def build(:atom, value, opts), do: build_atom(value, opts)
+
+  def build_string(value, _opts) when is_binary(value), do: {:ok, value}
+  def build_string(value, _opts) when is_integer(value), do: {:ok, Integer.to_string(value)}
+  def build_string(value, _opts) when is_float(value), do: {:ok, Float.to_string(value)}
+  def build_string(_value, _opts), do: {:error, "Invalid string value"}
+
+  def build_integer(value, _opts) when is_integer(value), do: {:ok, value}
+
+  def build_integer(value, _opts) when is_binary(value) do
+    case Integer.parse(value) do
+      {int, ""} -> {:ok, int}
+      _ -> {:error, "Invalid integer value"}
+    end
+  end
+
+  def build_integer(_value, _opts), do: {:error, "Invalid integer value"}
+
+  def build_float(value, _opts) when is_float(value), do: {:ok, value}
+
+  def build_float(value, _opts) when is_binary(value) do
+    case Float.parse(value) do
+      {float, ""} -> {:ok, float}
+      _ -> {:error, "Invalid float value"}
+    end
+  end
+
+  def build_float(_value, _opts), do: {:error, "Invalid float value"}
+
+  def build_boolean(value, _opts) when is_boolean(value), do: {:ok, value}
+
+  def build_boolean(value, _opts) when is_binary(value) do
+    case String.downcase(value) do
+      "true" -> {:ok, true}
+      "false" -> {:ok, false}
+      _ -> {:error, "Invalid boolean value"}
+    end
+  end
+
+  def build_boolean(_value, _opts), do: {:error, "Invalid boolean value"}
+
+  def build_atom(value, _opts) when is_atom(value), do: {:ok, value}
+  def build_atom(_value, _opts), do: {:error, "Invalid atom value"}
+end
