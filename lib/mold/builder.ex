@@ -1,4 +1,13 @@
 defmodule Mold.Builder do
+  def get_value(params, key, opts) do
+    case {Map.fetch(params, key), opts[:required], opts[:default]} do
+      {{:ok, nil}, true, _} -> {:error, :missing_key, key}
+      {{:ok, value}, _, _} -> {:ok, value}
+      {:error, true, _} -> {:error, :missing_key, key}
+      {:error, _, value} -> {:ok, value}
+    end
+  end
+
   def build(:string, value, opts), do: build_string(value, opts)
   def build(:integer, value, opts), do: build_integer(value, opts)
   def build(:float, value, opts), do: build_float(value, opts)

@@ -3,6 +3,29 @@ defmodule Mold.BuilderTest do
 
   alias Mold.Builder
 
+  describe "get_value/3" do
+    test "returns value of existing key" do
+      assert {:ok, "value"} = Builder.get_value(%{key: "value"}, :key, required: true)
+      assert {:ok, "value"} = Builder.get_value(%{key: "value"}, :key, required: false)
+    end
+
+    test "returns default value for missing key" do
+      assert {:ok, "default"} = Builder.get_value(%{}, :key, default: "default")
+    end
+
+    test "returns nil for missing key with no default if not required" do
+      assert {:ok, nil} = Builder.get_value(%{}, :key, required: false)
+    end
+
+    test "returns error for missing required key" do
+      assert {:error, :missing_key, :key} = Builder.get_value(%{}, :key, required: true)
+    end
+
+    test "returns error for nil value if required" do
+      assert {:error, :missing_key, :key} = Builder.get_value(%{key: nil}, :key, required: true)
+    end
+  end
+
   describe "build_string/2" do
     test "converts value to string" do
       assert {:ok, "test"} = Builder.build_string("test", [])
