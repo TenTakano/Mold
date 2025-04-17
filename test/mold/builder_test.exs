@@ -18,11 +18,12 @@ defmodule Mold.BuilderTest do
     end
 
     test "returns error for missing required key" do
-      assert {:error, :missing_key, :key} = Builder.get_value(%{}, :key, required: true)
+      assert {:error, "Missing required key :key"} = Builder.get_value(%{}, :key, required: true)
     end
 
     test "returns error for nil value if required" do
-      assert {:error, :missing_key, :key} = Builder.get_value(%{key: nil}, :key, required: true)
+      assert {:error, "Missing required key :key"} =
+               Builder.get_value(%{key: nil}, :key, required: true)
     end
   end
 

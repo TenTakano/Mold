@@ -1,9 +1,27 @@
 defmodule Mold.Builder do
+  def build(schema, params) when is_list(schema) and is_map(params) do
+    Enum.reduce(schema, {%{}, []}, fn {key, type, opts}, {acc, errors} ->
+      with {:ok, value} <- get_value(params, key, opts) do
+        {Map.put(acc, key, build(type, value, opts)), errors}
+      else
+        error ->
+          {acc, [error | errors]}
+      end
+    end)
+    |> case do
+      {result, []} ->
+        {:ok, result}
+
+      {_, errors} ->
+        {:error, Enum.reverse(errors)}
+    end
+  end
+
   def get_value(params, key, opts) do
     case {Map.fetch(params, key), opts[:required], opts[:default]} do
-      {{:ok, nil}, true, _} -> {:error, :missing_key, key}
+      {{:ok, nil}, true, _} -> {:error, "Missing required key :#{key}"}
       {{:ok, value}, _, _} -> {:ok, value}
-      {:error, true, _} -> {:error, :missing_key, key}
+      {:error, true, _} -> {:error, "Missing required key :#{key}"}
       {:error, _, value} -> {:ok, value}
     end
   end
