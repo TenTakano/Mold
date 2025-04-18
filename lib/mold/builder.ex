@@ -33,6 +33,11 @@ defmodule Mold.Builder do
   defp build_value(:float, value, opts), do: build_float(value, opts)
   defp build_value(:boolean, value, opts), do: build_boolean(value, opts)
   defp build_value(:atom, value, opts), do: build_atom(value, opts)
+  defp build_value(:time, value, opts), do: build_time(value, opts)
+  defp build_value(:date, value, opts), do: build_date(value, opts)
+  defp build_value(:datetime, value, opts), do: build_datetime(value, opts)
+
+  # Built-in types
 
   def build_string(value, _opts) when is_binary(value), do: {:ok, value}
   def build_string(value, _opts) when is_integer(value), do: {:ok, Integer.to_string(value)}
@@ -75,4 +80,41 @@ defmodule Mold.Builder do
 
   def build_atom(value, _opts) when is_atom(value), do: {:ok, value}
   def build_atom(value, _opts), do: {:error, "Invalid atom value: #{inspect(value)}"}
+
+  # Custom types
+
+  def build_time(%Time{} = value, _opts), do: {:ok, value}
+  def build_time(%DateTime{} = value, _opts), do: {:ok, DateTime.to_time(value)}
+
+  def build_time(value, _opts) when is_binary(value) do
+    case Time.from_iso8601(value) do
+      {:ok, time} -> {:ok, time}
+      {:error, _} -> {:error, "Given value is not ISO8601 format: #{inspect(value)}"}
+    end
+  end
+
+  def build_time(value, _opts), do: {:error, "Invalid time value: #{inspect(value)}"}
+
+  def build_date(%Date{} = value, _opts), do: {:ok, value}
+  def build_date(%DateTime{} = value, _opts), do: {:ok, DateTime.to_date(value)}
+
+  def build_date(value, _opts) when is_binary(value) do
+    case Date.from_iso8601(value) do
+      {:ok, date} -> {:ok, date}
+      {:error, _} -> {:error, "Given value is not ISO8601 format: #{inspect(value)}"}
+    end
+  end
+
+  def build_date(value, _opts), do: {:error, "Invalid date value: #{inspect(value)}"}
+
+  def build_datetime(%DateTime{} = value, _opts), do: {:ok, value}
+
+  def build_datetime(value, _opts) when is_binary(value) do
+    case DateTime.from_iso8601(value) do
+      {:ok, datetime, _} -> {:ok, datetime}
+      {:error, _} -> {:error, "Given value is not ISO8601 format: #{inspect(value)}"}
+    end
+  end
+
+  def build_datetime(value, _opts), do: {:error, "Invalid datetime value: #{inspect(value)}"}
 end

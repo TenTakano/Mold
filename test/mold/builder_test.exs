@@ -154,4 +154,53 @@ defmodule Mold.BuilderTest do
       assert {:error, "Invalid atom value: \"abc\""} = Builder.build_atom("abc", [])
     end
   end
+
+  describe "build_time/2" do
+    test "returns the time value" do
+      assert {:ok, ~T[12:34:56]} = Builder.build_time(~T[12:34:56], [])
+      assert {:ok, ~T[12:34:56]} = Builder.build_time("12:34:56", [])
+      assert {:ok, ~T[12:34:56]} = Builder.build_time(~U[2023-10-01 12:34:56Z], [])
+    end
+
+    test "returns error for non-time value" do
+      assert {:error, "Given value is not ISO8601 format: \"45:67:89\""} =
+               Builder.build_time("45:67:89", [])
+
+      assert {:error, "Invalid time value: []"} = Builder.build_time([], [])
+    end
+  end
+
+  describe "build_date/2" do
+    test "returns the date value" do
+      assert {:ok, ~D[2023-10-01]} = Builder.build_date(~D[2023-10-01], [])
+      assert {:ok, ~D[2023-10-01]} = Builder.build_date("2023-10-01", [])
+      assert {:ok, ~D[2023-10-01]} = Builder.build_date(~U[2023-10-01 12:34:56Z], [])
+    end
+
+    test "returns error for non-date value" do
+      assert {:error, "Given value is not ISO8601 format: \"2023-10-32\""} =
+               Builder.build_date("2023-10-32", [])
+
+      assert {:error, "Invalid date value: []"} = Builder.build_date([], [])
+    end
+  end
+
+  describe "build_datetime/2" do
+    test "returns the datetime value" do
+      assert {:ok, ~U[2023-10-01 12:34:56Z]} =
+               Builder.build_datetime(~U[2023-10-01 12:34:56Z], [])
+
+      assert {:ok, ~U[2023-10-01 12:34:56Z]} = Builder.build_datetime("2023-10-01T12:34:56Z", [])
+
+      assert {:ok, ~U[2023-10-01 01:00:00Z]} =
+               Builder.build_datetime("2023-10-01T10:00:00+09:00", [])
+    end
+
+    test "returns error for non-datetime value" do
+      assert {:error, "Given value is not ISO8601 format: \"2023-10-01T12:34:56\""} =
+               Builder.build_datetime("2023-10-01T12:34:56", [])
+
+      assert {:error, "Invalid datetime value: []"} = Builder.build_datetime([], [])
+    end
+  end
 end
