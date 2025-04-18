@@ -16,10 +16,11 @@ defmodule Mold do
   end
 
   defmacro req(name, type, opts \\ []) do
+    opts = Keyword.put(opts, :required, true)
+
     quote do
       @slots {unquote(name), unquote(type), unquote(opts)}
       @struct_slot unquote(name)
-      @required_slot unquote(name)
     end
   end
 
@@ -40,22 +41,15 @@ defmodule Mold do
       defstruct unquote(struct_slot)
 
       defp __slots__, do: unquote(Macro.escape(slots))
-      defp __struct_slot__, do: unquote(Macro.escape(struct_slot))
 
       def new(params) do
-        unquote(required_slot)
-        |> Enum.reject(&Map.has_key?(params, &1))
+        Mold.Builder.build(__slots__(), params)
         |> case do
-          [] ->
-            {:ok, struct(__MODULE__, params)}
+          {:ok, result} ->
+            {:ok, struct(__MODULE__, result)}
 
-          missing_keys ->
-            {:error,
-             %{
-               error: "Missing required keys",
-               missing_keys: missing_keys,
-               available_keys: __struct_slot__()
-             }}
+          {:error, _} = error ->
+            error
         end
       end
     end

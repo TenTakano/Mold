@@ -9,7 +9,8 @@ defmodule Mold.BuilderTest do
         {:name, :string, required: true},
         {:age, :integer, required: true},
         {:height, :float, default: 1.75},
-        {:active, :boolean, default: false}
+        {:active, :boolean, default: false},
+        {:note, :string, []}
       ]
 
       params = %{
@@ -20,7 +21,7 @@ defmodule Mold.BuilderTest do
       }
 
       assert {:ok, result} = Builder.build(schema, params)
-      assert result == %{name: "John Doe", age: 30, height: 1.80, active: true}
+      assert result == %{name: "John Doe", age: 30, height: 1.80, active: true, note: nil}
     end
 
     test "returns error for missing required keys" do
@@ -48,8 +49,8 @@ defmodule Mold.BuilderTest do
 
     test "returns multiple errors" do
       schema = [
-        {:name, :string, required: true},
-        {:age, :integer, required: true}
+        {:age, :integer, required: true},
+        {:name, :string, required: true}
       ]
 
       params = %{name: nil, age: "not an integer"}

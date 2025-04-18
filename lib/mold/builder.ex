@@ -2,7 +2,7 @@ defmodule Mold.Builder do
   def build(schema, params) when is_list(schema) and is_map(params) do
     Enum.reduce(schema, {%{}, []}, fn {key, type, opts}, {acc, errors} ->
       with {:ok, original_value} <- get_value(params, key, opts),
-           {:ok, value} <- build(type, original_value, opts) do
+           {:ok, value} <- build_value(type, original_value, opts) do
         {Map.put(acc, key, value), errors}
       else
         {:error, error} ->
@@ -14,7 +14,7 @@ defmodule Mold.Builder do
         {:ok, result}
 
       {_, errors} ->
-        {:error, Enum.reverse(errors)}
+        {:error, errors}
     end
   end
 
@@ -27,11 +27,12 @@ defmodule Mold.Builder do
     end
   end
 
-  def build(:string, value, opts), do: build_string(value, opts)
-  def build(:integer, value, opts), do: build_integer(value, opts)
-  def build(:float, value, opts), do: build_float(value, opts)
-  def build(:boolean, value, opts), do: build_boolean(value, opts)
-  def build(:atom, value, opts), do: build_atom(value, opts)
+  defp build_value(_, nil, _opts), do: {:ok, nil}
+  defp build_value(:string, value, opts), do: build_string(value, opts)
+  defp build_value(:integer, value, opts), do: build_integer(value, opts)
+  defp build_value(:float, value, opts), do: build_float(value, opts)
+  defp build_value(:boolean, value, opts), do: build_boolean(value, opts)
+  defp build_value(:atom, value, opts), do: build_atom(value, opts)
 
   def build_string(value, _opts) when is_binary(value), do: {:ok, value}
   def build_string(value, _opts) when is_integer(value), do: {:ok, Integer.to_string(value)}

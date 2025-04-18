@@ -22,13 +22,11 @@ defmodule MoldTest do
   end
 
   test "Mold.new/1 returns error for missing required keys" do
-    assert {:error, error} = Sample.new(%{name: "name", age: 25})
-    assert error.error == "Missing required keys"
-    assert error.missing_keys == [:active]
-    assert_elements_equal(error.available_keys, [:name, :age, :active, :note])
-  end
+    assert {:error, errors} = Sample.new(%{name: "name", age: "not an integer"})
 
-  defp assert_elements_equal(list1, list2) do
-    assert Enum.sort(list1) == Enum.sort(list2)
+    assert errors == [
+             age: "Invalid integer value: \"not an integer\"",
+             active: "Missing required key"
+           ]
   end
 end
