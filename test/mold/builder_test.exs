@@ -3,6 +3,66 @@ defmodule Mold.BuilderTest do
 
   alias Mold.Builder
 
+  describe "build/2" do
+    test "builds a map with valid values" do
+      schema = [
+        {:name, :string, required: true},
+        {:age, :integer, required: true},
+        {:height, :float, default: 1.75},
+        {:active, :boolean, default: false}
+      ]
+
+      params = %{
+        name: "John Doe",
+        age: 30,
+        height: 1.80,
+        active: true
+      }
+
+      assert {:ok, result} = Builder.build(schema, params)
+      assert result == %{name: "John Doe", age: 30, height: 1.80, active: true}
+    end
+
+    test "returns error for missing required keys" do
+      schema = [
+        {:name, :string, required: true},
+        {:age, :integer, required: true}
+      ]
+
+      params = %{name: "John Doe"}
+
+      assert {:error, errors} = Builder.build(schema, params)
+      assert errors == [age: "Missing required key"]
+    end
+
+    test "returns error for invalid values" do
+      schema = [
+        {:age, :integer, required: true}
+      ]
+
+      params = %{age: "not an integer"}
+
+      assert {:error, errors} = Builder.build(schema, params)
+      assert errors == [age: "Invalid integer value: \"not an integer\""]
+    end
+
+    test "returns multiple errors" do
+      schema = [
+        {:name, :string, required: true},
+        {:age, :integer, required: true}
+      ]
+
+      params = %{name: nil, age: "not an integer"}
+
+      assert {:error, errors} = Builder.build(schema, params)
+
+      assert errors == [
+               name: "Missing required key",
+               age: "Invalid integer value: \"not an integer\""
+             ]
+    end
+  end
+
   describe "get_value/3" do
     test "returns value of existing key" do
       assert {:ok, "value"} = Builder.get_value(%{key: "value"}, :key, required: true)
@@ -18,11 +78,11 @@ defmodule Mold.BuilderTest do
     end
 
     test "returns error for missing required key" do
-      assert {:error, "Missing required key :key"} = Builder.get_value(%{}, :key, required: true)
+      assert {:error, "Missing required key"} = Builder.get_value(%{}, :key, required: true)
     end
 
     test "returns error for nil value if required" do
-      assert {:error, "Missing required key :key"} =
+      assert {:error, "Missing required key"} =
                Builder.get_value(%{key: nil}, :key, required: true)
     end
   end
@@ -35,8 +95,8 @@ defmodule Mold.BuilderTest do
     end
 
     test "returns error for invalid value" do
-      assert {:error, _} = Builder.build_string(nil, [])
-      assert {:error, _} = Builder.build_string([], [])
+      assert {:error, "Invalid string value: nil"} = Builder.build_string(nil, [])
+      assert {:error, "Invalid string value: []"} = Builder.build_string([], [])
     end
   end
 
@@ -47,10 +107,10 @@ defmodule Mold.BuilderTest do
     end
 
     test "returns error for invalid value" do
-      assert {:error, _} = Builder.build_integer(123.45, [])
-      assert {:error, _} = Builder.build_integer(nil, [])
-      assert {:error, _} = Builder.build_integer([], [])
-      assert {:error, _} = Builder.build_integer("abc", [])
+      assert {:error, "Invalid integer value: 123.45"} = Builder.build_integer(123.45, [])
+      assert {:error, "Invalid integer value: nil"} = Builder.build_integer(nil, [])
+      assert {:error, "Invalid integer value: []"} = Builder.build_integer([], [])
+      assert {:error, "Invalid integer value: \"abc\""} = Builder.build_integer("abc", [])
     end
   end
 
@@ -61,10 +121,10 @@ defmodule Mold.BuilderTest do
     end
 
     test "returns error for invalid value" do
-      assert {:error, _} = Builder.build_float(123, [])
-      assert {:error, _} = Builder.build_float(nil, [])
-      assert {:error, _} = Builder.build_float([], [])
-      assert {:error, _} = Builder.build_float("abc", [])
+      assert {:error, "Invalid float value: 123"} = Builder.build_float(123, [])
+      assert {:error, "Invalid float value: nil"} = Builder.build_float(nil, [])
+      assert {:error, "Invalid float value: []"} = Builder.build_float([], [])
+      assert {:error, "Invalid float value: \"abc\""} = Builder.build_float("abc", [])
     end
   end
 
@@ -77,9 +137,9 @@ defmodule Mold.BuilderTest do
     end
 
     test "returns error for invalid value" do
-      assert {:error, _} = Builder.build_boolean(nil, [])
-      assert {:error, _} = Builder.build_boolean([], [])
-      assert {:error, _} = Builder.build_boolean("abc", [])
+      assert {:error, "Invalid boolean value: nil"} = Builder.build_boolean(nil, [])
+      assert {:error, "Invalid boolean value: []"} = Builder.build_boolean([], [])
+      assert {:error, "Invalid boolean value: \"abc\""} = Builder.build_boolean("abc", [])
     end
   end
 
@@ -89,8 +149,8 @@ defmodule Mold.BuilderTest do
     end
 
     test "returns error for non-atom value" do
-      assert {:error, _} = Builder.build_atom([], [])
-      assert {:error, _} = Builder.build_atom("abc", [])
+      assert {:error, "Invalid atom value: []"} = Builder.build_atom([], [])
+      assert {:error, "Invalid atom value: \"abc\""} = Builder.build_atom("abc", [])
     end
   end
 end
