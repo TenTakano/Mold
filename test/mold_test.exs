@@ -13,6 +13,16 @@ defmodule MoldTest do
   use ExUnit.Case, async: true
   doctest Mold
 
+  describe "struct" do
+    test "has Access protocol with @derive" do
+      sample = %Sample{name: "name", age: 25, active: true}
+      assert sample[:name] == "name"
+      assert sample[:age] == 25
+      assert sample[:active] == true
+      assert sample[:note] == nil
+    end
+  end
+
   describe "new/1" do
     test "new/1 creates a new struct with default values" do
       assert {:ok, %Sample{name: "name", age: 25, active: true, note: nil}} =
