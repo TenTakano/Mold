@@ -43,7 +43,9 @@ defmodule Mold do
       defp __slots__, do: unquote(Macro.escape(slots))
 
       def new(params) do
-        Mold.Builder.build(__slots__(), params)
+        atom_keys_params = Mold.MapUtil.to_atom_keys(params)
+
+        Mold.Builder.build(__slots__(), atom_keys_params)
         |> case do
           {:ok, result} ->
             {:ok, struct(__MODULE__, result)}
