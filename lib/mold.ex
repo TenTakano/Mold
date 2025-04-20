@@ -40,6 +40,17 @@ defmodule Mold do
       @enforce_keys unquote(required_slot)
       defstruct unquote(struct_slot)
 
+      @behaviour Access
+
+      @impl Access
+      def fetch(struct, key), do: Map.fetch(struct, key)
+
+      @impl Access
+      def get_and_update(struct, key, fun), do: Map.get_and_update(struct, key, fun)
+
+      @impl Access
+      def pop(struct, key), do: Map.pop(struct, key)
+
       defp __slots__, do: unquote(Macro.escape(slots))
 
       def new(params) do
