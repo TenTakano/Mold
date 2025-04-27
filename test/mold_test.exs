@@ -49,4 +49,20 @@ defmodule MoldTest do
              ]
     end
   end
+
+  describe "new!/1" do
+    test "new!/1 creates a new struct with default values" do
+      assert %Sample{name: "name", age: 25, active: true, note: nil} =
+               Sample.new!(%{name: "name", age: 25, active: true})
+
+      assert %Sample{name: "name", age: 25, active: true, note: "note"} =
+               Sample.new!(%{name: "name", age: 25, active: true, note: "note"})
+    end
+
+    test "new!/1 raises an error for missing required keys" do
+      assert_raise ArgumentError, fn ->
+        Sample.new!(%{name: "name", age: "not an integer"})
+      end
+    end
+  end
 end

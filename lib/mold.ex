@@ -65,6 +65,16 @@ defmodule Mold do
             error
         end
       end
+
+      def new!(params) do
+        case new(params) do
+          {:ok, result} ->
+            result
+
+          {:error, errors} ->
+            raise ArgumentError, message: "Invalid parameters: #{inspect(errors)}"
+        end
+      end
     end
   end
 end
