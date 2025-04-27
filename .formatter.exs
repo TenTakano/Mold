@@ -1,6 +1,8 @@
 locals_without_parans = [
   req: 2,
-  opt: 2
+  req: 3,
+  opt: 2,
+  opt: 3
 ]
 
 [
